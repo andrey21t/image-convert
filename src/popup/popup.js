@@ -1,4 +1,4 @@
-import { createJob, hasJobs } from '../lib/state.js'
+import { createJob, hasJobs, isProcessing } from '../lib/state.js'
 import { convertImage } from '../lib/convert.js'
 import { getSupportedOutputFormats } from '../lib/formats.js'
 import {
@@ -39,10 +39,10 @@ function addFiles(files) {
 }
 
 async function runConvert() {
-  const total = state.jobs.filter((j) => j.status === 'pending').length
+  const pendingJobs = state.jobs.filter((j) => j.status === 'pending')
+  const total = pendingJobs.length
   let done = 0
-  for (const job of state.jobs) {
-    if (job.status !== 'pending') continue
+  for (const job of pendingJobs) {
     job.status = 'processing'
     updateJobCard(job)
     updateButtons(state.jobs)
@@ -67,6 +67,10 @@ async function runConvert() {
 }
 
 function clearAll() {
+  if (isProcessing(state.jobs)) {
+    showError('Cannot clear: conversion in progress')
+    return
+  }
   clearJobsUI(state.jobs)
   state.jobs = []
   toggleSettings(state.jobs)

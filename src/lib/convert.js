@@ -1,5 +1,7 @@
 import { MIME_BY_FORMAT } from './constants.js'
 
+const IMAGE_LOAD_TIMEOUT_MS = 30000
+
 /**
  * @param {File} file
  * @returns {Promise<HTMLImageElement>}
@@ -9,8 +11,18 @@ async function loadImage(file) {
   try {
     return await new Promise((resolve, reject) => {
       const img = new Image()
-      img.onload = () => resolve(img)
-      img.onerror = () => reject(new Error(`Cannot load image: ${file.name}`))
+      const timer = setTimeout(
+        () => reject(new Error(`Image load timeout: ${file.name}`)),
+        IMAGE_LOAD_TIMEOUT_MS
+      )
+      img.onload = () => {
+        clearTimeout(timer)
+        resolve(img)
+      }
+      img.onerror = () => {
+        clearTimeout(timer)
+        reject(new Error(`Cannot load image: ${file.name}`))
+      }
       img.src = url
     })
   } finally {
