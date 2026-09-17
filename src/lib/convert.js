@@ -1,4 +1,4 @@
-import { MIME_BY_FORMAT, FORMATS_NEEDING_WHITE_BG } from './constants.js'
+import { MIME_BY_FORMAT, FORMATS_NEEDING_WHITE_BG, DEFAULT_QUALITY } from './constants.js'
 
 const IMAGE_LOAD_TIMEOUT_MS = 30000
 
@@ -71,7 +71,7 @@ export async function convertImage(file, opts) {
   const fillWhiteBg = FORMATS_NEEDING_WHITE_BG[opts.format] ?? false
   const { canvas } = createCanvas(img, opts.resize, fillWhiteBg)
   const mime = MIME_BY_FORMAT[opts.format]
-  const quality = Math.min(1, Math.max(0, (opts.quality ?? 80) / 100))
+  const quality = Math.min(1, Math.max(0, (opts.quality ?? DEFAULT_QUALITY) / 100))
   const blob = await new Promise((resolve, reject) => {
     canvas.toBlob(
       (b) => (b ? resolve(b) : reject(new Error(`Conversion failed: ${file.name}`))),

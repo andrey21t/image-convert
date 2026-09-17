@@ -134,7 +134,6 @@ describe('convert — D10 white-bg fill for transparent PNG (lossy formats)', ()
     await convertImage(file, { format: 'jpeg', quality: 80 })
     expect(ctx.fillRect).toHaveBeenCalledWith(0, 0, canvas.width, canvas.height)
     // Order: fillRect BEFORE drawImage
-    const calls = [ctx.fillRect.mock.calls[0], ctx.drawImage.mock.calls[0]]
     expect(ctx.fillRect.mock.invocationCallOrder[0]).toBeLessThan(
       ctx.drawImage.mock.invocationCallOrder[0]
     )
