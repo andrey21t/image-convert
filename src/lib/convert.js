@@ -1,4 +1,4 @@
-import { MIME_BY_FORMAT } from './constants.js'
+import { MIME_BY_FORMAT, FORMATS_NEEDING_WHITE_BG } from './constants.js'
 
 const IMAGE_LOAD_TIMEOUT_MS = 30000
 
@@ -33,9 +33,10 @@ async function loadImage(file) {
 /**
  * @param {HTMLImageElement} img
  * @param {{width?: number, height?: number}} [resize]
+ * @param {boolean} [fillWhiteBg=false] — for lossy target formats (D10)
  * @returns {{canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D}}
  */
-function createCanvas(img, resize) {
+function createCanvas(img, resize, fillWhiteBg = false) {
   let w = img.naturalWidth
   let h = img.naturalHeight
   if (resize?.width && resize?.height) {
@@ -52,6 +53,10 @@ function createCanvas(img, resize) {
   canvas.width = Math.max(1, w)
   canvas.height = Math.max(1, h)
   const ctx = canvas.getContext('2d')
+  if (fillWhiteBg) {
+    ctx.fillStyle = '#FFFFFF'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+  }
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
   return { canvas, ctx }
 }
@@ -63,7 +68,8 @@ function createCanvas(img, resize) {
  */
 export async function convertImage(file, opts) {
   const img = await loadImage(file)
-  const { canvas } = createCanvas(img, opts.resize)
+  const fillWhiteBg = FORMATS_NEEDING_WHITE_BG[opts.format] ?? false
+  const { canvas } = createCanvas(img, opts.resize, fillWhiteBg)
   const mime = MIME_BY_FORMAT[opts.format]
   const quality = Math.min(1, Math.max(0, (opts.quality ?? 80) / 100))
   const blob = await new Promise((resolve, reject) => {

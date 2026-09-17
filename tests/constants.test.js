@@ -7,7 +7,8 @@ import {
   MAX_FILES,
   MAX_FILE_SIZE,
   MIME_BY_FORMAT,
-  EXT_BY_FORMAT
+  EXT_BY_FORMAT,
+  FORMATS_NEEDING_WHITE_BG
 } from '../src/lib/constants.js'
 
 describe('constants', () => {
@@ -44,5 +45,12 @@ describe('constants', () => {
     expect(EXT_BY_FORMAT.jpeg).toBe('jpg')
     expect(EXT_BY_FORMAT.webp).toBe('webp')
     expect(EXT_BY_FORMAT.avif).toBe('avif')
+  })
+
+  it('FORMATS_NEEDING_WHITE_BG: only lossy formats (D10)', () => {
+    expect(FORMATS_NEEDING_WHITE_BG.png).toBe(false)
+    expect(FORMATS_NEEDING_WHITE_BG.jpeg).toBe(true)
+    expect(FORMATS_NEEDING_WHITE_BG.webp).toBe(true)
+    expect(FORMATS_NEEDING_WHITE_BG.avif).toBe(true)
   })
 })
