@@ -1,6 +1,8 @@
 import { createJob, hasJobs, isProcessing } from '../lib/state.js'
 import { convertImage } from '../lib/convert.js'
 import { getSupportedOutputFormats } from '../lib/formats.js'
+import { createZip } from '../lib/zip.js'
+import { EXT_BY_FORMAT } from '../lib/constants.js'
 import {
   renderJobs,
   updateJobCard,
@@ -78,8 +80,34 @@ function clearAll() {
 }
 
 async function downloadZip() {
-  // TODO Phase 1 Week 2: fflate zip
-  showError('ZIP download: not implemented yet')
+  const done = state.jobs.filter((j) => j.status === 'done' && j.result)
+  if (done.length === 0) {
+    showError('No completed jobs to download')
+    return
+  }
+  const files = {}
+  for (const job of done) {
+    const baseName = job.name.replace(/\.[^.]+$/, '')
+    const ext = EXT_BY_FORMAT[state.format] || state.format
+    files[`${baseName}.${ext}`] = job.result
+  }
+  try {
+    const zipBlob = await createZip(files)
+    triggerDownload(zipBlob, 'converted-images.zip')
+  } catch (err) {
+    showError(`ZIP failed: ${err.message}`)
+  }
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 function bindEvents() {
