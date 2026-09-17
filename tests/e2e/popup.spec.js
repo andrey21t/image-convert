@@ -32,8 +32,7 @@ function pngFixture(name = 'red-1x1.png') {
 }
 
 test.beforeAll(async () => {
-  // Verify fixtures exist; if missing, generate them at runtime
-  // (kept simple: committed fixtures preferred)
+  // Fixtures committed at tests/e2e/fixtures/red-1x1.png
 })
 
 test.describe('Empty state', () => {
@@ -76,14 +75,16 @@ test.describe('File input (click to select)', () => {
   })
 })
 
-test.describe('Drag & drop', () => {
-  test('drop 1 PNG → 1 job card (drag&drop path)', async ({ page }) => {
+test.describe('Drag & drop (via change event, same addFiles path)', () => {
+  test('drop 1 PNG → 1 job card (drop event routes to addFiles, same as change)', async ({
+    page,
+  }) => {
     await page.goto(POPUP_URL)
-    // Playwright doesn't natively simulate file drag&drop from outside the browser.
-    // Workaround: dispatch drop event programmatically with a synthesized DataTransfer.
+    // Note: Playwright doesn't natively simulate file drag from outside the browser.
+    // Drop handler (popup.js:171-177) routes to addFiles (same as change handler at 155-160).
+    // We test the change path here — drop-handler has 6 lines and converges to addFiles.
+    // For real drop coverage, would need page.dispatchEvent with DataTransfer (not in MVP scope).
     const png = pngFixture()
-    // Easiest robust approach: use setInputFiles which exercises the same addFiles
-    // code path via the change handler (drop just routes to addFiles too).
     await page.setInputFiles('#file-input', png)
     await expect(page.getByTestId('job-card')).toHaveCount(1)
   })
@@ -223,7 +224,7 @@ test.describe('Clear all', () => {
 })
 
 test.describe('IndexedDB persistence', () => {
-  test('convert job → reload → jobs restored from IDB', async ({ page }) => {
+  test('convert job → reload → jobs restored from IDB, download works', async ({ page }) => {
     await page.goto(POPUP_URL)
     await page.setInputFiles('#file-input', pngFixture())
     await page.locator('#format-select').selectOption('jpeg')
@@ -234,5 +235,13 @@ test.describe('IndexedDB persistence', () => {
     await page.reload()
     await expect(page.getByTestId('job-card')).toHaveCount(1)
     await expect(page.locator('[data-job-status]')).toHaveText('done')
+    await expect(page.getByTestId('download-btn')).toBeEnabled()
+
+    // Verify download works after restore (catches Blob serialization issues in IDB)
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 5000 }),
+      page.getByTestId('download-btn').click(),
+    ])
+    expect(download.suggestedFilename()).toBe('converted-images.zip')
   })
 })
