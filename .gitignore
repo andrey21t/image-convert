@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+build/
+*.zip
+*.crx
+*.pem
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# AI/IDE
+.scratch/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Override global gitignore (AGENTS.md is project-level here, not AI artifact)
+!AGENTS.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+coverage/
+.vitest-cache/
+playwright-report/
+test-results/
+
+# Logs
+*.log
+npm-debug.log*
