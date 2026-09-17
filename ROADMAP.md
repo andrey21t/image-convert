@@ -61,6 +61,9 @@ Total: ~12 недель до CWS live (10-12 baseline + 2 недели buffer).
 - [ ] Privacy Policy на GitHub Pages
 - [ ] ZIP (manifest в root, без подпапок)
 - [ ] Аккаунт CWS developer ($5 + 2-Step Verification ON)
+- [ ] `PERMISSION_JUSTIFICATION.md` в repo (D2 — donor: peterbenoit; мы zero perms → 1 абзац объяснения)
+- [ ] `PRIVACY_POLICY.md` в repo → публикуется на GitHub Pages → URL для CWS (D3 — donor: peterbenoit)
+- [ ] Malware incident disclaimer в README "Why privacy-first" (D4 — donor: saoud30 + imageastype March 2026 incident)
 
 ### Submit + review (4-8 недель)
 - [ ] Upload ZIP в Chrome Web Store devconsole
@@ -127,6 +130,13 @@ Total: ~12 недель до CWS live (10-12 baseline + 2 недели buffer).
 - Batch renaming
 - Firefox port (MV3 cross-browser)
 - Desktop app (Tauri, если есть demand)
+- Per-format quality control (D5 — donor: Save Image As Type; low pri, global slider covers 95%)
+- GIF static export (D6 — donor: peterbenoit; canvas can't encode GIF, needs gif.js lib)
+- PDF export (D7 — pdf-lib 19MB unpacked = bundle bloat + CWS review risk; Benoit limit >16,000px)
+- Offscreen API для background batch canvas (D8 — donor: saoud30 background.js `chrome.offscreen.createDocument({reasons:['DOM_PARSER']})`; migrate when batch >20 files, popup blocks UI)
+- Right-click контекст-меню на page images (D9 — different niche, requires `<all_urls>` host permission = trust cost)
+- stripMetadata real EXIF (D11 — donor: saoud30's `stripMetadata` is no-op, don't borrow; real needs piexif.js/exifr ~5-30KB)
+- Target file size compress "<200KB" (D13 — HN DocShrink pain; browser-image-compression, we SKIPPED in W2)
 
 ## Buffer / Risks
 

@@ -103,6 +103,8 @@ empty → files-dropped → jobs-pending → jobs-processing → jobs-done → z
 - [ ] Manifest V3 compliant
 - [ ] Privacy Policy доступна по URL
 - [ ] Tests: 50+ unit, 10+ e2e
+- [ ] **JPEG/WebP lossy conversion сохраняет белый фон для transparent PNG** (D10 — fix convert.js:55, add unit test; donor research 2026-09-17 сессия 2, source: PLANS Decision Log)
+- [ ] **Phase 2 prerequisites** (после MVP, pre-CWS-publish): `PERMISSION_JUSTIFICATION.md` (D2), `PRIVACY_POLICY.md` (D3, источник для GitHub Pages URL), malware disclaimer в README (D4). Donor research 2026-09-17.
 
 ## Open questions (решить в Phase 0)
 
