@@ -3,6 +3,7 @@ import { convertImage } from '../lib/convert.js'
 import { getSupportedOutputFormats } from '../lib/formats.js'
 import { createZip } from '../lib/zip.js'
 import { EXT_BY_FORMAT } from '../lib/constants.js'
+import { getAllJobs, putJob, clearJobs } from '../lib/idb.js'
 import {
   renderJobs,
   updateJobCard,
@@ -57,6 +58,11 @@ async function runConvert() {
       job.status = 'done'
       job.result = blob
       job.resultSize = blob.size
+      try {
+        await putJob(serializeJob(job))
+      } catch (e) {
+        console.warn('[idb] persist failed', job.id, e.message)
+      }
     } catch (err) {
       job.status = 'error'
       job.error = err.message
@@ -75,8 +81,38 @@ function clearAll() {
   }
   clearJobsUI(state.jobs)
   state.jobs = []
+  clearJobs().catch((e) => console.warn('[idb] clear failed', e.message))
   toggleSettings(state.jobs)
   updateButtons(state.jobs)
+}
+
+function serializeJob(job) {
+  return {
+    id: job.id,
+    name: job.name,
+    originalSize: job.originalSize,
+    resultSize: job.resultSize,
+    status: job.status,
+    result: job.result,
+    format: state.format,
+    quality: state.quality
+  }
+}
+
+function restoreJob(stored) {
+  let thumbUrl = ''
+  if (stored.result instanceof Blob) {
+    thumbUrl = URL.createObjectURL(stored.result)
+  }
+  return {
+    id: stored.id,
+    name: stored.name,
+    originalSize: stored.originalSize,
+    resultSize: stored.resultSize,
+    status: stored.status,
+    result: stored.result,
+    thumbUrl
+  }
 }
 
 async function downloadZip() {
@@ -194,7 +230,21 @@ async function filterUnsupportedOptions() {
 async function init() {
   bindEvents()
   await filterUnsupportedOptions()
+  await restoreFromIDB()
   console.log('[image-convert] popup ready', { state, hasJobs: hasJobs(state.jobs) })
+}
+
+async function restoreFromIDB() {
+  try {
+    const stored = await getAllJobs()
+    if (stored.length === 0) return
+    state.jobs = stored.map(restoreJob)
+    renderJobs(state.jobs)
+    toggleSettings(state.jobs)
+    updateButtons(state.jobs)
+  } catch (e) {
+    console.warn('[idb] restore failed', e.message)
+  }
 }
 
 if (typeof document !== 'undefined') {
