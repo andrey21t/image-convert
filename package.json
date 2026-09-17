@@ -1,0 +1,30 @@
+{
+  "name": "image-convert",
+  "version": "0.0.0.1",
+  "description": "Privacy-first bulk image converter Chrome extension. PNG/JPEG/WebP/AVIF, resize, compress. 100% client-side, no network requests.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "lint": "eslint src/ --ext .js",
+    "format": "prettier --write src/"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.7.1",
+    "eslint": "^9.0.0",
+    "jsdom": "^30.1.0",
+    "playwright": "^1.48.0",
+    "prettier": "^3.3.0",
+    "vite": "^6.0.0",
+    "vitest": "^2.1.0"
+  },
+  "dependencies": {
+    "browser-image-compression": "^2.0.2",
+    "fflate": "^0.8.2"
+  }
+}

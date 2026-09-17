@@ -17,22 +17,38 @@ Concurrents (iloveimg, convertio, etc.) загружают изображени�
 ## Quick Start (для разработки)
 
 ```bash
-git clone <repo-url> image-convert
+git clone https://github.com/andrey21t/image-convert.git
 cd image-convert
 npm install
-npm run dev
+npm run dev      # Vite dev server, HMR
+npm run build    # Production build в dist/
+npm test         # Vitest unit tests (17+)
+npm run lint     # ESLint
 ```
 
-В Chrome: `chrome://extensions` → Developer mode → Load unpacked → выбрать `dist/`.
+Загрузить в Chrome:
+1. `npm run build` → `dist/`
+2. Открой `chrome://extensions`
+3. Developer mode → Load unpacked → выбери `dist/`
 
-## Features (MVP)
+## Features (MVP Phase 1 — in progress)
 
-- Drag & drop multiple images
-- Convert: PNG ↔ JPEG ↔ WebP ↔ AVIF
-- Resize: width/height/scale
-- Compress: quality 1-100
-- Bulk download как ZIP
-- 100% client-side
+- [x] Project scaffold (Vite + @crxjs/vite-plugin)
+- [x] Manifest V3 (zero permissions)
+- [x] Popup UI (Chrome-style, DESIGN_SYSTEM.md tokens)
+- [x] Drag&drop + file picker (up to 20 files)
+- [x] Format selector (PNG/JPEG/WebP/AVIF with browser support detection)
+- [x] Quality slider (1-100)
+- [x] Resize toggle (W × H)
+- [x] Jobs list with thumbnails
+- [x] Canvas-based conversion (PNG/JPEG/WebP, AVIF если браузер поддерживает)
+- [x] Clear / Convert / Download buttons (state-aware)
+- [ ] ZIP download (fflate, Week 2)
+- [ ] IndexedDB persistence (Week 2)
+- [ ] browser-image-compression для quality (Week 2)
+- [ ] 50+ unit tests (currently 17)
+- [ ] 10+ e2e tests (Playwright)
+- [ ] 100% client-side, no network requests
 
 ## Stack
 

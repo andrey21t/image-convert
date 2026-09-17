@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Image Converter — bulk convert, compress, resize",
+  "version": "0.0.0.1",
+  "description": "Convert PNG/JPEG/WebP/AVIF, compress and resize multiple images locally in browser. 100% client-side, no uploads.",
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "Image Converter"
+  },
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
+  "permissions": [],
+  "host_permissions": [],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; connect-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'"
+  }
+}
