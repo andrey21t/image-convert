@@ -1,4 +1,4 @@
-import { MAX_FILES } from './constants.js'
+import { MAX_FILES, MAX_FILE_SIZE, SUPPORTED_INPUT_MIMES } from './constants.js'
 import {
   hasJobs,
   hasCompletedJobs,
@@ -131,6 +131,8 @@ export function showError(message) {
 export function filterAccepted(files) {
   return Array.from(files)
     .filter((f) => f.type.startsWith('image/'))
+    .filter((f) => SUPPORTED_INPUT_MIMES.includes(f.type))
+    .filter((f) => f.size <= MAX_FILE_SIZE)
     .slice(0, MAX_FILES)
 }
 

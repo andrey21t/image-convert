@@ -17,6 +17,24 @@ describe('ui — filterAccepted', () => {
     expect(result.map((f) => f.name)).toEqual(['a.png', 'c.jpg'])
   })
 
+  it('filters out unsupported image types (SVG/BMP/HEIC)', () => {
+    const files = [
+      new File(['a'], 'a.svg', { type: 'image/svg+xml' }),
+      new File(['b'], 'b.bmp', { type: 'image/bmp' }),
+      new File(['c'], 'c.png', { type: 'image/png' }),
+      new File(['d'], 'd.heic', { type: 'image/heic' })
+    ]
+    const result = filterAccepted(files)
+    expect(result.map((f) => f.name)).toEqual(['c.png'])
+  })
+
+  it('rejects oversized files (>50MB)', () => {
+    const big = new File([new ArrayBuffer(50 * 1024 * 1024 + 1)], 'big.png', { type: 'image/png' })
+    const ok = new File([new ArrayBuffer(1024)], 'ok.png', { type: 'image/png' })
+    const result = filterAccepted([big, ok])
+    expect(result.map((f) => f.name)).toEqual(['ok.png'])
+  })
+
   it('caps at MAX_FILES (20)', () => {
     const files = Array.from(
       { length: 30 },
@@ -30,7 +48,7 @@ describe('ui — filterAccepted', () => {
     expect(filterAccepted([])).toEqual([])
   })
 
-  it('keeps images with empty MIME if type starts with image/', () => {
+  it('keeps AVIF (supported format)', () => {
     const files = [new File(['a'], 'a.avif', { type: 'image/avif' })]
     const result = filterAccepted(files)
     expect(result).toHaveLength(1)
