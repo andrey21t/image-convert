@@ -365,3 +365,8 @@ body {
   width: 0%;
   transition: width 100ms linear;
 }
+
+/* Universal rule: ensure [hidden] attribute wins over any display:flex/block/etc. */
+[hidden] {
+  display: none !important;
+}
