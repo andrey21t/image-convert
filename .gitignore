@@ -33,6 +33,8 @@ coverage/
 .vitest-cache/
 playwright-report/
 test-results/
+tests/e2e/matrix-report.json
+tests/e2e/matrix-report.md
 
 # Logs
 *.log
