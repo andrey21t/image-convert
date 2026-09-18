@@ -14,6 +14,19 @@ Chrome extension (Manifest V3) для массовой конверсии изо
 
 Concurrents (iloveimg, convertio, etc.) загружают изображения на серверы. Наше УТП — ноль network requests. GDPR-clean для EU юзеров, доверие для privacy-conscious сегмента.
 
+### Malware / safety disclaimer
+
+This extension is **not malware**. Verifiable guarantees:
+
+- **Zero permissions** declared in `manifest.json` (`permissions: []`, `host_permissions: []`).
+- **No network access** — the Content Security Policy explicitly sets `connect-src 'none'`, which Chrome enforces at the runtime layer. No fetch, XHR, WebSocket, or remote script can leave the extension.
+- **No remote code** — all JavaScript is bundled locally; no `eval`, no dynamic imports from URLs, no remote `<script>`.
+- **No data collection** — see [PRIVACY_POLICY.md](./PRIVACY_POLICY.md). No analytics, no telemetry, no crash reporting, no cookies, no trackers.
+- **Source code is public** — <https://github.com/andrey21t/image-convert>. Audit it yourself before installing.
+- **Permission justification** — see [PERMISSION_JUSTIFICATION.md](./PERMISSION_JUSTIFICATION.md) for the rationale of each (zero) permission.
+
+If you see a network request from this extension in DevTools, it is a bug — please open an issue.
+
 ## Quick Start (для разработки)
 
 ```bash
@@ -43,12 +56,16 @@ npm run lint     # ESLint
 - [x] Jobs list with thumbnails
 - [x] Canvas-based conversion (PNG/JPEG/WebP, AVIF если браузер поддерживает)
 - [x] Clear / Convert / Download buttons (state-aware)
-- [ ] ZIP download (fflate, Week 2)
-- [ ] IndexedDB persistence (Week 2)
-- [ ] browser-image-compression для quality (Week 2)
-- [ ] 50+ unit tests (currently 17)
-- [ ] 10+ e2e tests (Playwright)
-- [ ] 100% client-side, no network requests
+- [x] ZIP download (fflate)
+- [x] IndexedDB persistence (done jobs)
+- [x] White background for transparent PNG → JPEG/WebP/AVIF (D10 fix)
+- [x] 71 unit tests (Vitest + jsdom)
+- [x] 23 e2e tests (Playwright, 18 popup + 5 matrix 144 cases)
+- [x] 100% client-side, no network requests
+- [x] PERMISSION_JUSTIFICATION.md (Phase 2)
+- [x] PRIVACY_POLICY.md (Phase 2)
+- [x] Malware disclaimer в README (Phase 2)
+- [ ] browser-image-compression (canvas quality sufficient for MVP, deferred)
 
 ## Stack
 
@@ -76,8 +93,8 @@ Read [spec.md](./spec.md) ПЕРЕД любой фичей — это source of 
 ## Phase status (см. PLANS.md)
 
 - Phase 0: Pre-flight ✅ (2026-09-17)
-- Phase 1: MVP код ⏳
-- Phase 2: CWS publish ⏳
+- Phase 1: MVP код ✅ (Week 1 + Week 2 complete, 2026-09-17)
+- Phase 2: CWS publish ⏳ (D2/D3/D4 done, CWS account pending)
 - Phase 3: Promotion ⏳
 - Phase 4: Monetization ⏳
 

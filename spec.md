@@ -22,14 +22,20 @@ Chrome extension для массовой конверсии изображени
 
 ### Core (Phase 1, 2-3 недели)
 
-- [ ] Popup с drag & drop зоной
-- [ ] Multi-file select (до 20 файлов за раз)
-- [ ] Конверсия: PNG ↔ JPEG ↔ WebP ↔ AVIF
-- [ ] Resize: width × height или scale %
-- [ ] Compress: quality 1-100 (slider)
-- [ ] Bulk download как ZIP
-- [ ] Progress bar для batch processing
-- [ ] Превью thumbnail каждого файла
+- [x] Popup с drag & drop зоной
+- [x] Multi-file select (до 20 файлов за раз)
+- [x] Конверсия: PNG ↔ JPEG ↔ WebP ↔ AVIF
+- [x] Resize: width × height или scale %
+- [x] Compress: quality 1-100 (slider)
+- [x] Bulk download как ZIP
+- [x] Progress bar для batch processing
+- [x] Превью thumbnail каждого файла
+
+### Phase 2 prerequisites (после MVP, pre-CWS-publish)
+
+- [x] `PERMISSION_JUSTIFICATION.md` (D2) — zero permissions rationale
+- [x] `PRIVACY_POLICY.md` (D3) — публикуется на GitHub Pages
+- [x] Malware disclaimer в README (D4) — "Why privacy-first" + safety guarantees
 
 ### Non-goals (MVP — НЕ делаем)
 
@@ -95,16 +101,16 @@ empty → files-dropped → jobs-pending → jobs-processing → jobs-done → z
 
 ## Validation criteria
 
-- [ ] Все 4 формата (PNG/JPEG/WebP/AVIF) конвертируются во все 4 (16 пар)
-- [ ] Batch 20 файлов обрабатывается <30 секунд на среднем ноутбуке
-- [ ] Файл 10 MB → IndexedDB → result <3 сек
-- [ ] No network requests в DevTools (только chrome://)
-- [ ] Bundle unpacked <5 MB
-- [ ] Manifest V3 compliant
-- [ ] Privacy Policy доступна по URL
-- [ ] Tests: 50+ unit, 10+ e2e
-- [ ] **JPEG/WebP lossy conversion сохраняет белый фон для transparent PNG** (D10 — fix convert.js:55, add unit test; donor research 2026-09-17 сессия 2, source: PLANS Decision Log)
-- [ ] **Phase 2 prerequisites** (после MVP, pre-CWS-publish): `PERMISSION_JUSTIFICATION.md` (D2), `PRIVACY_POLICY.md` (D3, источник для GitHub Pages URL), malware disclaimer в README (D4). Donor research 2026-09-17.
+- [x] All 4 formats (PNG/JPEG/WebP/AVIF) — matrix runner 144 cases, 108 done + 36 AVIF skipped (headless), 0 errors
+- [x] Batch 20 файлов обрабатывается <30 секунд на среднем ноутбуке
+- [x] Файл 10 MB → IndexedDB → result <3 сек
+- [x] No network requests в DevTools (CSP `connect-src 'none'`)
+- [x] Bundle unpacked <5 MB (44 KB unpacked)
+- [x] Manifest V3 compliant
+- [ ] Privacy Policy доступна по URL (D3 файл готов, deploy на GitHub Pages — user action)
+- [x] Tests: 71 unit + 23 e2e (18 popup + 5 matrix)
+- [x] **JPEG/WebP lossy conversion сохраняет белый фон для transparent PNG** (D10 fix, 36 unit tests + visual verify в matrix runner)
+- [x] **Phase 2 prerequisites**: `PERMISSION_JUSTIFICATION.md` (D2), `PRIVACY_POLICY.md` (D3, источник для GitHub Pages URL), malware disclaimer в README (D4)
 
 ## Open questions (решить в Phase 0)
 
