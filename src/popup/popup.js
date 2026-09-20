@@ -50,6 +50,7 @@ async function runConvert() {
     updateJobCard(job)
     updateButtons(state.jobs)
     try {
+      job.format = state.format
       const blob = await convertImage(job.file, {
         format: state.format,
         quality: state.quality,
@@ -94,7 +95,7 @@ function serializeJob(job) {
     resultSize: job.resultSize,
     status: job.status,
     result: job.result,
-    format: state.format,
+    format: job.format ?? state.format,
     quality: state.quality
   }
 }
@@ -111,6 +112,7 @@ function restoreJob(stored) {
     resultSize: stored.resultSize,
     status: stored.status,
     result: stored.result,
+    format: stored.format,
     thumbUrl
   }
 }
@@ -122,10 +124,18 @@ async function downloadZip() {
     return
   }
   const files = {}
+  const used = new Set()
   for (const job of done) {
+    const fmt = job.format ?? state.format
+    const ext = EXT_BY_FORMAT[fmt] || fmt
     const baseName = job.name.replace(/\.[^.]+$/, '')
-    const ext = EXT_BY_FORMAT[state.format] || state.format
-    files[`${baseName}.${ext}`] = job.result
+    let name = `${baseName}.${ext}`
+    let suffix = 1
+    while (used.has(name)) {
+      name = `${baseName}-${suffix++}.${ext}`
+    }
+    used.add(name)
+    files[name] = job.result
   }
   try {
     const zipBlob = await createZip(files)
