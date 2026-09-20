@@ -472,9 +472,15 @@ test.describe('ZIP naming', () => {
     await page.getByTestId('convert-btn').click() // webp default
     await waitForSettled(page, ['done', 'done'])
     const zip = await downloadZipBytes(page)
-    const entries = Object.keys(unzipSync(zip)).sort()
-    expect(entries).toEqual(['photo-1.webp', 'photo.webp'])
-    expect(Object.values(unzipSync(zip)).length).toBe(2)
+    const entries = unzipSync(zip)
+    expect(Object.keys(entries).sort()).toEqual(['photo-1.webp', 'photo.webp'])
+    // pin the data-loss invariant fully: each name must carry ITS OWN blob,
+    // not just any blob (a wrong binding of blob→name would still yield 2
+    // correctly-named entries). Fixtures differ in dims on purpose.
+    const first = await imgDims(page, entries['photo.webp'], 'image/webp')
+    const second = await imgDims(page, entries['photo-1.webp'], 'image/webp')
+    expect(first).toEqual({ ok: true, w: 60, h: 60 })
+    expect(second).toEqual({ ok: true, w: 80, h: 80 })
   })
 
   test('cyrillic + emoji + uppercase names survive the ZIP round-trip', async ({ page }) => {
@@ -553,7 +559,12 @@ test.describe('ZIP naming', () => {
     await page.getByTestId('convert-btn').click() // webp default
     await waitForSettled(page, ['done', 'done'])
     const zip = await downloadZipBytes(page)
-    const entries = Object.keys(unzipSync(zip)).sort()
-    expect(entries).toEqual(['-1.webp', '.webp'])
+    const entries = unzipSync(zip)
+    expect(Object.keys(entries).sort()).toEqual(['-1.webp', '.webp'])
+    // same as the basename-collision test: pin blob-per-name identity
+    const first = await imgDims(page, entries['.webp'], 'image/webp')
+    const second = await imgDims(page, entries['-1.webp'], 'image/webp')
+    expect(first).toEqual({ ok: true, w: 30, h: 30 })
+    expect(second).toEqual({ ok: true, w: 40, h: 40 })
   })
 })
