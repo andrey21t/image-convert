@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Image Converter — bulk convert, compress, resize",
+  "name": "Bulk Image Converter — PNG/JPG/WebP/AVIF",
   "version": "0.0.0.1",
   "description": "Convert PNG/JPEG/WebP/AVIF, compress and resize multiple images locally in browser. 100% client-side, no uploads.",
   "action": {
