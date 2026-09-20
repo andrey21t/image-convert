@@ -567,4 +567,50 @@ test.describe('ZIP naming', () => {
     expect(first).toEqual({ ok: true, w: 30, h: 30 })
     expect(second).toEqual({ ok: true, w: 40, h: 40 })
   })
+
+  test('numeric basename twice → 1.webp + 1-1.webp, both blobs distinct', async ({
+    page,
+  }) => {
+    // review S2 / handoff edge №5: numeric-only basename — Set-based dedup
+    // (popup.js:126-139) must not depend on key properties; '-1' < '.' so
+    // the suffixed entry sorts first (same as the dotfile case)
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', [
+      file(genPng(50, 50), '1.png', 'image/png'),
+      file(genPng(70, 70), '1.png', 'image/png'),
+    ])
+    await page.getByTestId('convert-btn').click() // webp default
+    await waitForSettled(page, ['done', 'done'])
+    const zip = await downloadZipBytes(page)
+    const entries = unzipSync(zip)
+    expect(Object.keys(entries).sort()).toEqual(['1-1.webp', '1.webp'])
+    // pin blob-per-name identity (W1 style): fixtures differ in dims on purpose
+    const first = await imgDims(page, entries['1.webp'], 'image/webp')
+    const second = await imgDims(page, entries['1-1.webp'], 'image/webp')
+    expect(first).toEqual({ ok: true, w: 50, h: 50 })
+    expect(second).toEqual({ ok: true, w: 70, h: 70 })
+  })
+
+  test('png→png identity twice → names unchanged (photo.png + photo-1.png)', async ({
+    page,
+  }) => {
+    // review S2 / handoff edge №6: target ext == input ext keeps the literal
+    // name photo.png (popup.js:130-131), the collision gets the -N suffix
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', [
+      file(genPng(30, 30), 'photo.png', 'image/png'),
+      file(genPng(40, 40), 'photo.png', 'image/png'),
+    ])
+    await page.locator('#format-select').selectOption('png')
+    await page.getByTestId('convert-btn').click()
+    await waitForSettled(page, ['done', 'done'])
+    const zip = await downloadZipBytes(page)
+    const entries = unzipSync(zip)
+    expect(Object.keys(entries).sort()).toEqual(['photo-1.png', 'photo.png'])
+    // pin blob-per-name identity (W1 style)
+    const first = await imgDims(page, entries['photo.png'], 'image/png')
+    const second = await imgDims(page, entries['photo-1.png'], 'image/png')
+    expect(first).toEqual({ ok: true, w: 30, h: 30 })
+    expect(second).toEqual({ ok: true, w: 40, h: 40 })
+  })
 })

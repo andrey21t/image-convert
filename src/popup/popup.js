@@ -42,6 +42,10 @@ function addFiles(files) {
 }
 
 async function runConvert() {
+  // re-entry guard: disabled buttons stop real users, but dispatchEvent
+  // bypasses it (pinned by Races tests); second entry could restamp job.format
+  // mid-flight of another loop (Bug #2 pattern, review W2)
+  if (isProcessing(state.jobs)) return
   const pendingJobs = state.jobs.filter((j) => j.status === 'pending')
   const total = pendingJobs.length
   let done = 0
