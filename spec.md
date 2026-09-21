@@ -1,6 +1,8 @@
 # spec.md — source of truth для AI-агентов
 
 > Читай ПЕРЕД любой фичей. README для людей, spec для AI.
+>
+> **STATUS (2026-09-21):** Этот документ — initial design spec. Часть запланированного не внедрена: `browser-image-compression` и `chrome.storage.local` отказаны (см. TECH_STACK.md «Что НЕ вошло»). Актуальный список фич — в README.md, актуальный стек — в TECH_STACK.md. Пункты spec про эти технологии — historical, не "к реализации".
 
 ## One-liner
 

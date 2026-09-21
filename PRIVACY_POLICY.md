@@ -24,8 +24,10 @@ Specifically, we do **not** collect:
 ## What the extension touches
 
 - **Files you select** for conversion — read into memory, processed via Canvas API, then either downloaded as a ZIP or persisted in your browser's IndexedDB for the "done jobs" list.
-- **IndexedDB** — used only to remember your own converted files between popup reopens. This data lives only on your device. The **Clear all** button deletes it immediately.
-- **chrome.storage.local** — used only for your own settings (format, quality, resize). Stays on your device.
+- **IndexedDB** — used only to remember your own converted files between popup reopens. Each stored record contains the converted file (Blob), its name, sizes, status, format, and quality. This data lives only on your device. The **Clear all** button deletes it immediately.
+- **Settings (format, quality, resize)** — kept in-memory only. They are not persisted anywhere: closing the popup resets them to defaults.
+- **EXIF metadata** — removed automatically as part of conversion. The Canvas API redraws pixel data fresh, so camera model, GPS coordinates, capture date, and other EXIF tags from the original file are not carried over into the converted output. This is a privacy feature, not a data collection: the metadata is discarded, not stored or transmitted.
+- **chrome.storage** — not used at all. The extension does not read from or write to any Chrome storage API outside the browser-native IndexedDB described above.
 
 None of the above is transmitted anywhere.
 

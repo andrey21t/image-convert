@@ -99,8 +99,9 @@ test.describe('Filtering unsupported / oversized', () => {
       buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>'),
     })
     await expect(page.getByTestId('job-card')).toHaveCount(0)
-    // error toast visible briefly
-    await expect(page.locator('#progress')).toBeVisible()
+    // dropzone shows error styling and message
+    await expect(page.locator('#dropzone')).toHaveClass(/is-drag-error/)
+    await expect(page.locator('.dropzone-error-text')).toContainText('PNG')
   })
 
   test('non-image file → rejected', async ({ page }) => {
@@ -132,9 +133,12 @@ test.describe('Settings controls', () => {
   test('resize toggle shows width/height fields', async ({ page }) => {
     await page.goto(POPUP_URL)
     await page.setInputFiles('#file-input', pngFixture())
-    await expect(page.locator('#resize-fields')).toBeHidden()
+    // Fields are always visible but disabled until toggle is checked
+    await expect(page.getByTestId('resize-width')).toBeDisabled()
+    await expect(page.getByTestId('resize-height')).toBeDisabled()
     await page.getByTestId('resize-toggle').check()
-    await expect(page.locator('#resize-fields')).toBeVisible()
+    await expect(page.getByTestId('resize-width')).toBeEnabled()
+    await expect(page.getByTestId('resize-height')).toBeEnabled()
   })
 
   test('resize width input updates', async ({ page }) => {

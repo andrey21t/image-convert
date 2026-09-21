@@ -21,7 +21,11 @@ export function renderJobCard(job) {
   const name = node.querySelector('[data-job-name]')
   const meta = node.querySelector('[data-job-meta]')
   const status = node.querySelector('[data-job-status]')
-  thumb.src = job.thumbUrl
+  if (job.thumbUrl) {
+    thumb.src = job.thumbUrl
+  } else {
+    thumb.removeAttribute('src')
+  }
   thumb.alt = job.name
   name.textContent = job.name
   meta.textContent = formatBytes(job.originalSize)
@@ -64,15 +68,36 @@ export function updateJobCard(job) {
 
 /**
  * @param {Job[]} jobs
+ * @param {{enabled: boolean, width?: number, height?: number}} [resize]
  * @returns {void}
  */
-export function updateButtons(jobs) {
+export function updateButtons(jobs, resize) {
   const convertBtn = document.getElementById('convert-btn')
   const downloadBtn = document.getElementById('download-btn')
   const clearBtn = document.getElementById('clear-btn')
-  convertBtn.disabled = !hasPendingJobs(jobs) || isProcessing(jobs)
-  downloadBtn.disabled = !hasCompletedJobs(jobs) || isProcessing(jobs)
-  clearBtn.disabled = !hasJobs(jobs) || isProcessing(jobs)
+  const formatSelect = document.getElementById('format-select')
+  const resizeToggle = document.getElementById('resize-toggle')
+  const resizeWidth = document.getElementById('resize-width')
+  const resizeHeight = document.getElementById('resize-height')
+  const qualitySlider = document.getElementById('quality-slider')
+  const processing = isProcessing(jobs)
+  // Resize guard: if checkbox on but both W and H empty → no valid resize
+  // config. Disable Convert so user must fill a field or uncheck Resize.
+  const resizeBlocking = resize?.enabled && !resize?.width && !resize?.height
+  convertBtn.disabled = !hasJobs(jobs) || processing || resizeBlocking
+  downloadBtn.disabled = !hasCompletedJobs(jobs) || processing || hasPendingJobs(jobs)
+  clearBtn.disabled = !hasJobs(jobs) || processing
+  // Lock format select while there are done jobs — prevents accidental
+  // mixed-format ZIP when user adds a new file after the first batch.
+  if (formatSelect) {
+    formatSelect.disabled = hasCompletedJobs(jobs) || processing
+  }
+  // Lock resize + quality controls during processing — preserves invariant
+  // that all jobs in one batch use the same conversion settings.
+  if (resizeToggle) resizeToggle.disabled = processing
+  if (resizeWidth) resizeWidth.disabled = processing || !resize?.enabled
+  if (resizeHeight) resizeHeight.disabled = processing || !resize?.enabled
+  if (qualitySlider) qualitySlider.disabled = processing
 }
 
 /**
@@ -81,7 +106,10 @@ export function updateButtons(jobs) {
  */
 export function toggleSettings(jobs) {
   const settings = document.getElementById('settings')
-  settings.hidden = !hasJobs(jobs)
+  const badge = document.querySelector('.privacy-badge')
+  const visible = hasJobs(jobs)
+  settings.hidden = !visible
+  if (badge) badge.classList.toggle('is-visible', visible)
 }
 
 /**

@@ -4,7 +4,7 @@
 
 ## Проект
 
-`image-convert` — Chrome extension (Manifest V3) для bulk конверсии изображений. Client-side only, privacy-first. Стек: Vanilla JS + Vite + browser-image-compression + canvas API.
+`image-convert` — Chrome extension (Manifest V3) для bulk конверсии изображений. Client-side only, privacy-first. Стек: Vanilla JS + Vite + @crxjs/vite-plugin + canvas API + fflate (ZIP) + IndexedDB. **Не** использует browser-image-compression (рассмотрен и отказан — см. TECH_STACK.md) и **не** использует chrome.storage.local (настройки in-memory, см. TECH_STACK.md).
 
 ## Защищённые файлы (НЕ ТРОГАТЬ)
 

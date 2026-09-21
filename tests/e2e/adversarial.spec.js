@@ -239,16 +239,14 @@ test.describe('Limits', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('Resize math', () => {
-  test('width=0 → treated as "not provided", original dims preserved', async ({ page }) => {
-    await convertOne(page, genPng(100, 80), {
-      format: 'jpeg',
-      resize: { width: 0 },
-    })
-    await waitForSettled(page, ['done']) // [FACT] 0 is falsy in convert.js branches
-    const zip = await downloadZipBytes(page)
-    const entries = Object.values(unzipSync(zip))
-    const dims = await imgDims(page, entries[0], 'image/jpeg')
-    expect(dims).toEqual({ ok: true, w: 100, h: 80 })
+  test('width=0 + checkbox on → Convert disabled (matches min=1 constraint)', async ({ page }) => {
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', file(genPng(100, 80), 'img.png', 'image/png'))
+    await page.getByTestId('resize-toggle').check()
+    await page.getByTestId('resize-width').fill('0')
+    // [FACT] New UX: checkbox on + no valid W/H → Convert disabled.
+    // Input has min=1, so 0 is invalid. User must fill ≥1 or uncheck Resize.
+    await expect(page.getByTestId('convert-btn')).toBeDisabled()
   })
 
   test('negative width → clamped to 1×1 by canvas safety, no crash', async ({ page }) => {
@@ -498,33 +496,11 @@ test.describe('ZIP naming', () => {
     expect(entries).toEqual(['PHOTO.webp', 'файл 😀.webp', 'фото тест.webp'])
   })
 
-  test('format changed after convert → ZIP ext matches convert-time content (x.webp stays webp)', async ({
+  test('format-select locks after conversion → prevents accidental mixed-format ZIP', async ({
     page,
   }) => {
-    // regression: popup.js downloadZip (2026-09-20) took ext from
-    // state.format at download time while the blob was encoded at convert
-    // time — contract now: ext follows the per-job convert-time format
-    await page.goto(POPUP_URL)
-    await page.setInputFiles('#file-input', file(genPng(60, 60), 'x.png', 'image/png'))
-    await page.getByTestId('convert-btn').click() // default webp
-    await waitForSettled(page, ['done'])
-    // user changes mind BEFORE downloading — must NOT rewrite history
-    await page.locator('#format-select').selectOption('jpeg')
-    const zip = await downloadZipBytes(page)
-    const entries = unzipSync(zip)
-    const names = Object.keys(entries)
-    const bytes = entries[names[0]]
-    const isWebp =
-      bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 // 'RIFF'
-    expect(isWebp).toBe(true)
-    expect(names[0]).toBe('x.webp')
-  })
-
-  test('mixed-format session: jobs keep their convert-time formats in the ZIP', async ({
-    page,
-  }) => {
-    // convert 2 files as webp → switch select to jpeg → add + convert a 3rd
-    // → one ZIP, each entry named with the format it was actually encoded in
+    // After 2 files convert to webp, format-select should be disabled.
+    // Adding a 3rd file and clicking Convert keeps it in webp — no mixed ZIP.
     await page.goto(POPUP_URL)
     await page.setInputFiles('#file-input', [
       file(genPng(60, 60), 'a.png', 'image/png'),
@@ -532,18 +508,32 @@ test.describe('ZIP naming', () => {
     ])
     await page.getByTestId('convert-btn').click() // default webp
     await waitForSettled(page, ['done', 'done'])
-    await page.locator('#format-select').selectOption('jpeg')
+    // Format select is locked while done jobs exist
+    await expect(page.locator('#format-select')).toBeDisabled()
+    // Adding a 3rd file does NOT unlock the format select
     await page.setInputFiles('#file-input', file(genPng(60, 60), 'c.png', 'image/png'))
+    await expect(page.locator('#format-select')).toBeDisabled()
     await page.getByTestId('convert-btn').click()
     await waitForSettled(page, ['done', 'done', 'done'])
+    // All three entries are webp — no mixed formats
     const entries = unzipSync(await downloadZipBytes(page))
-    expect(Object.keys(entries).sort()).toEqual(['a.webp', 'b.webp', 'c.jpg'])
-    const a = entries['a.webp']
-    const c = entries['c.jpg']
-    expect(a[0]).toBe(0x52) // 'R' — RIFF/WebP bytes
-    expect(a[1]).toBe(0x49) // 'I'
-    expect(c[0]).toBe(0xff) // JPEG SOI
-    expect(c[1]).toBe(0xd8)
+    expect(Object.keys(entries).sort()).toEqual(['a.webp', 'b.webp', 'c.webp'])
+    for (const buf of Object.values(entries)) {
+      expect(buf[0]).toBe(0x52) // 'R' — RIFF/WebP bytes
+      expect(buf[1]).toBe(0x49) // 'I'
+    }
+  })
+
+  test('format-select unlocks after Clear — new batch can pick a new format', async ({
+    page,
+  }) => {
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', file(genPng(60, 60), 'a.png', 'image/png'))
+    await page.getByTestId('convert-btn').click()
+    await waitForSettled(page, ['done'])
+    await expect(page.locator('#format-select')).toBeDisabled()
+    await page.getByTestId('clear-btn').click()
+    await expect(page.locator('#format-select')).toBeEnabled()
   })
 
   test('dotfile ".png" selected twice → both entries survive dedup (.webp + -1.webp)', async ({
@@ -612,5 +602,154 @@ test.describe('ZIP naming', () => {
     const second = await imgDims(page, entries['photo-1.png'], 'image/png')
     expect(first).toEqual({ ok: true, w: 30, h: 30 })
     expect(second).toEqual({ ok: true, w: 40, h: 40 })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// I. EXIF metadata stripping (privacy-first claim)
+// ---------------------------------------------------------------------------
+
+test.describe('EXIF stripping', () => {
+  test('JPG with EXIF (camera + GPS + date) → converted output has no EXIF', async ({
+    page,
+  }) => {
+    // [FACT] Canvas API redraws pixels fresh — original EXIF (camera model,
+    // GPS coords, capture date) is dropped during conversion. This is the
+    // privacy-first claim surfaced in the privacy-badge and STORE_LISTING.
+    const exifFixture = readFileSync(join(__dirname, 'fixtures', 'exif-test.jpg'))
+    // Sanity: fixture must contain EXIF markers before conversion
+    expect(exifFixture.includes('TestCam')).toBe(true)
+    expect(exifFixture.includes('TestModel')).toBe(true)
+
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', {
+      name: 'exif-test.jpg',
+      mimeType: 'image/jpeg',
+      buffer: exifFixture,
+    })
+    await page.locator('#format-select').selectOption('webp')
+    await page.getByTestId('convert-btn').click()
+    await waitForSettled(page, ['done'])
+
+    const zip = await downloadZipBytes(page)
+    const entries = unzipSync(zip)
+    const outBuf = entries['exif-test.webp']
+    const outStr = Buffer.from(outBuf).toString('latin1')
+
+    // [FACT] Converted output must NOT contain EXIF payload strings
+    expect(outStr.includes('TestCam')).toBe(false)
+    expect(outStr.includes('TestModel')).toBe(false)
+    // [FACT] Output is valid WebP (RIFF header)
+    expect(outBuf[0]).toBe(0x52) // 'R'
+    expect(outBuf[1]).toBe(0x49) // 'I'
+    expect(outBuf[2]).toBe(0x46) // 'F'
+    expect(outBuf[3]).toBe(0x46) // 'F'
+  })
+
+  test('privacy-badge appears when files added, hides on Clear', async ({ page }) => {
+    await page.goto(POPUP_URL)
+    await expect(page.getByTestId('privacy-badge')).toBeHidden()
+    await page.setInputFiles('#file-input', file(genPng(30, 30), 'a.png', 'image/png'))
+    await expect(page.getByTestId('privacy-badge')).toBeVisible()
+    await page.getByTestId('clear-btn').click()
+    await expect(page.getByTestId('privacy-badge')).toBeHidden()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// J. Resize guard UX (Convert disabled when checkbox on but no W/H)
+// ---------------------------------------------------------------------------
+
+test.describe('Resize guard', () => {
+  test('checkbox on + both fields empty → Convert disabled', async ({ page }) => {
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', file(genPng(60, 60), 'a.png', 'image/png'))
+    // Before enabling Resize: Convert active
+    await expect(page.getByTestId('convert-btn')).toBeEnabled()
+    await page.getByTestId('resize-toggle').check()
+    // Resize enabled, both W and H empty → Convert disabled
+    await expect(page.getByTestId('convert-btn')).toBeDisabled()
+  })
+
+  test('checkbox on + only W filled → Convert enabled (auto-aspect-ratio)', async ({ page }) => {
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', file(genPng(60, 60), 'a.png', 'image/png'))
+    await page.getByTestId('resize-toggle').check()
+    await page.getByTestId('resize-width').fill('30')
+    // One field filled → valid resize config → Convert enabled
+    await expect(page.getByTestId('convert-btn')).toBeEnabled()
+  })
+
+  test('checkbox on + only H filled → Convert enabled', async ({ page }) => {
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', file(genPng(60, 60), 'a.png', 'image/png'))
+    await page.getByTestId('resize-toggle').check()
+    await page.getByTestId('resize-height').fill('30')
+    await expect(page.getByTestId('convert-btn')).toBeEnabled()
+  })
+
+  test('checkbox on + W filled then cleared → Convert re-disables', async ({ page }) => {
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', file(genPng(60, 60), 'a.png', 'image/png'))
+    await page.getByTestId('resize-toggle').check()
+    await page.getByTestId('resize-width').fill('30')
+    await expect(page.getByTestId('convert-btn')).toBeEnabled()
+    await page.getByTestId('resize-width').fill('')
+    await expect(page.getByTestId('convert-btn')).toBeDisabled()
+  })
+
+  test('checkbox off → Convert enabled regardless of W/H', async ({ page }) => {
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', file(genPng(60, 60), 'a.png', 'image/png'))
+    // Don't check Resize → Convert enabled (default state)
+    await expect(page.getByTestId('convert-btn')).toBeEnabled()
+  })
+
+  test('resize controls lock during processing', async ({ page }) => {
+    // [FACT] W2 fix: resize + quality controls disabled during isProcessing
+    // to preserve invariant "all jobs in one batch use same settings"
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', file(genPng(60, 60), 'a.png', 'image/png'))
+    await page.getByTestId('convert-btn').click()
+    // During processing: resize-toggle + quality-slider must be disabled
+    await expect(page.getByTestId('resize-toggle')).toBeDisabled()
+    await expect(page.getByTestId('quality-slider')).toBeDisabled()
+    await waitForSettled(page, ['done'])
+    // After done: re-enabled
+    await expect(page.getByTestId('resize-toggle')).toBeEnabled()
+    await expect(page.getByTestId('quality-slider')).toBeEnabled()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// K. Hover-zoom overlay (preview on thumbnail hover)
+// ---------------------------------------------------------------------------
+
+test.describe('Hover-zoom overlay', () => {
+  test('hover on thumbnail shows preview, leave hides it', async ({ page }) => {
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', file(genPng(60, 60), 'a.png', 'image/png'))
+    // No preview initially
+    await expect(page.locator('.image-preview')).toHaveCount(0)
+    // Hover on thumbnail
+    const thumb = page.locator('[data-job-thumb]')
+    await thumb.hover()
+    // After 150ms delay, overlay appears
+    await expect(page.locator('.image-preview')).toBeVisible()
+    // Hover away (move to header)
+    await page.locator('.app-header').hover()
+    await expect(page.locator('.image-preview')).toBeHidden()
+  })
+
+  test('quick pass-through does not flicker (under 150ms)', async ({ page }) => {
+    await page.goto(POPUP_URL)
+    await page.setInputFiles('#file-input', file(genPng(60, 60), 'a.png', 'image/png'))
+    // Quick hover-leave without waiting for delay — overlay should not appear
+    const thumb = page.locator('[data-job-thumb]')
+    await thumb.hover()
+    await page.locator('.app-header').hover()
+    // Wait 200ms to be sure no delayed show fires
+    await page.waitForTimeout(200)
+    await expect(page.locator('.image-preview')).toHaveCount(0)
   })
 })

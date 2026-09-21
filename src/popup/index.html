@@ -1,80 +1,139 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image Converter</title>
-  <link rel="stylesheet" href="popup.css" />
-</head>
-<body>
-  <header class="app-header">
-    <h1 class="app-title">Image Converter</h1>
-    <span class="app-subtitle">PNG · JPEG · WebP · AVIF</span>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Converter</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1 class="app-title">Image Converter</h1>
+      <span class="app-subtitle">PNG · JPEG · WebP · AVIF</span>
+    </header>
 
-  <main class="app-main">
-    <section id="dropzone" class="dropzone" data-testid="dropzone">
-      <svg class="dropzone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M3 16.5V21h18v-4.5" />
-        <path d="M12 3v13" />
-        <path d="M7 8l5-5 5 5" />
-      </svg>
-      <p class="dropzone-title">Drop images here</p>
-      <p class="dropzone-hint">or click to select · up to 20 files</p>
-      <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,image/avif" multiple hidden />
-    </section>
+    <main class="app-main">
+      <section id="dropzone" class="dropzone" data-testid="dropzone">
+        <svg
+          class="dropzone-icon"
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path d="M3 16.5V21h18v-4.5" />
+          <path d="M12 3v13" />
+          <path d="M7 8l5-5 5 5" />
+        </svg>
+        <p class="dropzone-title">Drop images here</p>
+        <p class="dropzone-hint">or click to select · up to 20 files</p>
+        <input
+          type="file"
+          id="file-input"
+          accept="image/png,image/jpeg,image/webp,image/avif"
+          multiple
+          hidden
+        />
+      </section>
 
-    <section id="settings" class="settings" hidden>
-      <div class="settings-row">
-        <label for="format-select" class="settings-label">Format</label>
-        <select id="format-select" class="settings-control" data-testid="format-select">
-          <option value="webp" selected>WebP (best compression)</option>
-          <option value="jpeg">JPEG (photos)</option>
-          <option value="png">PNG (lossless)</option>
-          <option value="avif">AVIF (best quality)</option>
-        </select>
-      </div>
-      <div class="settings-row">
-        <label for="quality-slider" class="settings-label">Quality</label>
-        <input type="range" id="quality-slider" class="settings-control" min="1" max="100" value="80" data-testid="quality-slider" />
-        <output id="quality-value" class="settings-value">80</output>
-      </div>
-      <div class="settings-row">
-        <label for="resize-toggle" class="settings-label">Resize</label>
-        <input type="checkbox" id="resize-toggle" class="settings-control" data-testid="resize-toggle" />
-        <div id="resize-fields" class="resize-fields" hidden>
-          <input type="number" id="resize-width" placeholder="W" min="1" max="10000" data-testid="resize-width" />
-          <span class="resize-x">×</span>
-          <input type="number" id="resize-height" placeholder="H" min="1" max="10000" data-testid="resize-height" />
+      <section id="settings" class="settings" hidden>
+        <div class="settings-row">
+          <label for="format-select" class="settings-label">Format</label>
+          <select id="format-select" class="settings-control" data-testid="format-select">
+            <option value="webp" selected>WebP (best compression)</option>
+            <option value="jpeg">JPEG (photos)</option>
+            <option value="png">PNG (lossless)</option>
+            <option value="avif">AVIF (best quality)</option>
+          </select>
         </div>
-      </div>
-    </section>
+        <div class="settings-row">
+          <label for="quality-slider" class="settings-label">Quality</label>
+          <input
+            type="range"
+            id="quality-slider"
+            class="settings-control"
+            min="1"
+            max="100"
+            value="80"
+            data-testid="quality-slider"
+          />
+          <output id="quality-value" class="settings-value">80</output>
+        </div>
+        <div class="settings-row settings-row-resize">
+          <label for="resize-toggle" class="settings-label">Resize</label>
+          <div id="resize-fields" class="resize-fields">
+            <input
+              type="number"
+              id="resize-width"
+              placeholder="W"
+              min="1"
+              max="10000"
+              data-testid="resize-width"
+              disabled
+            />
+            <span class="resize-x">×</span>
+            <input
+              type="number"
+              id="resize-height"
+              placeholder="H"
+              min="1"
+              max="10000"
+              data-testid="resize-height"
+              disabled
+            />
+          </div>
+          <input
+            type="checkbox"
+            id="resize-toggle"
+            class="settings-control resize-checkbox"
+            data-testid="resize-toggle"
+          />
+        </div>
+      </section>
 
-    <section id="jobs" class="jobs" data-testid="jobs-list"></section>
-  </main>
+      <p class="privacy-badge" data-testid="privacy-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/>
+        </svg>
+        EXIF auto-removed · 100% local
+      </p>
 
-  <footer class="app-footer">
-    <button id="convert-btn" class="btn btn-primary" disabled data-testid="convert-btn">Convert</button>
-    <button id="download-btn" class="btn btn-secondary" disabled data-testid="download-btn">Download ZIP</button>
-    <button id="clear-btn" class="btn btn-ghost" disabled data-testid="clear-btn">Clear</button>
-  </footer>
+      <section id="jobs" class="jobs" data-testid="jobs-list"></section>
+    </main>
 
-  <div id="progress" class="progress" hidden>
-    <div class="progress-track"></div>
-    <div class="progress-fill" data-testid="progress-fill"></div>
-  </div>
+    <footer class="app-footer">
+      <button id="convert-btn" class="btn btn-primary" disabled data-testid="convert-btn">
+        Convert
+      </button>
+      <button id="download-btn" class="btn btn-primary" disabled data-testid="download-btn">
+        Download ZIP
+      </button>
+      <button id="clear-btn" class="btn btn-secondary" disabled data-testid="clear-btn">
+        Clear
+      </button>
+    </footer>
 
-  <template id="job-card-template">
-    <article class="job-card" data-testid="job-card">
-      <img class="job-thumb" alt="" data-job-thumb />
-      <div class="job-info">
-        <p class="job-name" data-job-name></p>
-        <p class="job-meta" data-job-meta></p>
-      </div>
-      <span class="job-status" data-job-status>pending</span>
-    </article>
-  </template>
+    <div id="progress" class="progress" hidden>
+      <div class="progress-track"></div>
+      <div class="progress-fill" data-testid="progress-fill"></div>
+    </div>
 
-  <script type="module" src="./popup.js"></script>
-</body>
+    <template id="job-card-template">
+      <article class="job-card" data-testid="job-card">
+        <img class="job-thumb" alt="" data-job-thumb />
+        <div class="job-info">
+          <p class="job-name" data-job-name></p>
+          <p class="job-meta" data-job-meta></p>
+        </div>
+        <span class="job-status" data-job-status>pending</span>
+        <button class="job-remove" data-job-remove aria-label="Remove file" title="Remove">
+          ×
+        </button>
+      </article>
+    </template>
+
+    <script type="module" src="./popup.js"></script>
+  </body>
 </html>

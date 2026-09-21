@@ -138,6 +138,20 @@ Total: ~12 недель до CWS live (10-12 baseline + 2 недели buffer).
 - stripMetadata real EXIF (D11 — donor: saoud30's `stripMetadata` is no-op, don't borrow; real needs piexif.js/exifr ~5-30KB)
 - Target file size compress "<200KB" (D13 — HN DocShrink pain; browser-image-compression, we SKIPPED in W2)
 
+## Product #2 (backlog, зафиксировано 2026-09-19) — screenshot-redact
+
+> Идея из категории AgentCloak (PII-маскировка перед отправкой в AI). Взята на вооружение, старт — ТОЛЬКО после CWS publish image-convert (Phase 2 exit).
+
+**Суть:** расширение для локальной маскировки PII на скриншотах перед вставкой в ChatGPT/Claude/баг-репорты — OCR (Tesseract.js WASM) + регулярки (карты/счета/паспорт РФ/СНИЛС/ИНН) + MediaPipe Face Detection для лиц. 100% client-side, zero permissions — та же CSP-модель (`connect-src 'none'`), тот же privacy-first нарратив, тот же CWS-аккаунт.
+
+**Почему взяли:** категория горячая (InCountry AgentCloak + 2 репо за 10 дней — рынок валидирован не нами), пересечение с активами ~80% (MV3, canvas, privacy-нарратив, канал дистрибуции).
+
+**Аудитория:** QA-инженеры (скрины багов с юзер-данными), поддержка, юристы/бухгалтеры (152-ФЗ pain).
+
+**Риски (гипотезы, не факты):** конкуренты в CWS в нише "screenshot redact" есть, без privacy-first повествования; локальный OCR с русским текстом тянет посредственно; спрос не проверен до запуска.
+
+**Первый шаг (когда дойдём):** Research спринт — grep CWS на "redact screenshot" конкурентов + их install counts, потом решаем go/no-go.
+
 ## Buffer / Risks
 
 - 2 недели buffer встроены в Phase 1-2 (10-12 недель baseline + 2 buffer)

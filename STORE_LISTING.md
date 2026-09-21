@@ -54,6 +54,9 @@ Optional width × height in pixels. Off by default — original size is preserve
 **Per-file error isolation**
 A broken file doesn't kill the batch. The rest keep converting.
 
+**EXIF metadata auto-removed**
+Camera model, GPS location, capture date — all metadata is stripped automatically during conversion. Your photos don't leak where or when they were taken. No setting to enable, no extra step. The browser's Canvas API redraws pixels fresh, leaving the original EXIF behind.
+
 **Duplicate name handling**
 Two files named `photo.png`? The second becomes `photo-1.png` automatically.
 

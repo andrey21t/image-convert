@@ -44,36 +44,45 @@ npm run lint     # ESLint
 2. Открой `chrome://extensions`
 3. Developer mode → Load unpacked → выбери `dist/`
 
-## Features (MVP Phase 1 — in progress)
+## Features (MVP Phase 1)
 
 - [x] Project scaffold (Vite + @crxjs/vite-plugin)
 - [x] Manifest V3 (zero permissions)
 - [x] Popup UI (Chrome-style, DESIGN_SYSTEM.md tokens)
 - [x] Drag&drop + file picker (up to 20 files)
+- [x] Folder drop (recursive directory walk via webkitGetAsEntry)
 - [x] Format selector (PNG/JPEG/WebP/AVIF with browser support detection)
-- [x] Quality slider (1-100)
-- [x] Resize toggle (W × H)
+- [x] Quality slider (1-100, default 80)
+- [x] Resize toggle (W × H, auto-aspect-ratio when one field filled)
+- [x] Resize guard (Convert disabled when checkbox on but no W/H)
 - [x] Jobs list with thumbnails
+- [x] Hover-zoom on thumbnail (full-quality preview overlay)
+- [x] Per-card remove (× button)
 - [x] Canvas-based conversion (PNG/JPEG/WebP, AVIF если браузер поддерживает)
+- [x] EXIF metadata auto-removed (Canvas API redraws pixels, drops EXIF)
+- [x] Privacy badge in UI ("EXIF auto-removed · 100% local")
 - [x] Clear / Convert / Download buttons (state-aware)
-- [x] ZIP download (fflate)
-- [x] IndexedDB persistence (done jobs)
+- [x] ZIP download (fflate, duplicate-name handling)
+- [x] IndexedDB persistence (done jobs, atomic single-record delete)
 - [x] White background for transparent PNG → JPEG/WebP/AVIF (D10 fix)
+- [x] Format-select lock during/after conversion (prevents mixed-format ZIP)
+- [x] Resize + quality controls lock during processing
+- [x] Re-convert with new quality/resize (same format)
 - [x] 71 unit tests (Vitest + jsdom)
-- [x] 23 e2e tests (Playwright, 18 popup + 5 matrix 144 cases)
+- [x] 60 e2e tests (Playwright, includes EXIF strip, resize guard, hover-zoom)
 - [x] 100% client-side, no network requests
 - [x] PERMISSION_JUSTIFICATION.md (Phase 2)
 - [x] PRIVACY_POLICY.md (Phase 2)
 - [x] Malware disclaimer в README (Phase 2)
-- [ ] browser-image-compression (canvas quality sufficient for MVP, deferred)
 
 ## Stack
 
-- **Manifest V3** (Chrome extension)
+- **Manifest V3** (Chrome extension, zero permissions)
 - **Vanilla JS** (small bundle, меньше CWS review time)
-- **browser-image-compression** (~0.86 MB unpacked)
-- **Vite** (build tool)
-- **canvas API** (native browser, zero deps)
+- **Vite** (build tool, @crxjs/vite-plugin)
+- **canvas API** (native browser, zero deps for conversion)
+- **fflate** (ZIP packaging, ~10KB)
+- **IndexedDB** (persistence for done jobs)
 
 Подробнее: [TECH_STACK.md](./TECH_STACK.md)
 
